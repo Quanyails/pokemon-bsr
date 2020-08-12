@@ -1,9 +1,9 @@
 module.exports = {
   env: {
-    browser: true,
     es2020: true,
+    node: true,
   },
-  extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended", ""],
+  extends: ["airbnb-base", "prettier", "eslint-config-prettier"],
   parser: "@typescript-eslint/parser",
   parserOptions: {
     ecmaVersion: 11,
