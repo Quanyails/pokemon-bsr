@@ -21,14 +21,12 @@ module.exports = {
         tsx: "never",
       },
     ],
+    "import/no-extraneous-dependencies": [
+      "error",
+      { devDependencies: ["examples/**"] },
+    ],
     "no-unused-vars": "off",
     "@typescript-eslint/no-unused-vars": "error",
-    "sort-imports": [
-      "error",
-      {
-        ignoreCase: true,
-      },
-    ],
   },
   settings: {
     "import/resolver": {
