@@ -1,5 +1,13 @@
 import { getMean, getStdev } from "./math";
-import { Pokemon, PokemonStats } from "./pokedex";
+
+interface Stats {
+  hp: number;
+  atk: number;
+  def: number;
+  spa: number;
+  spd: number;
+  spe: number;
+}
 
 interface EffectiveStats {
   hp: number;
@@ -72,8 +80,8 @@ interface PrettyBsr {
 }
 
 export interface Metagame {
-  getBsr: (stats: PokemonStats) => PrettyBsr;
-  getMagicBsr: (stats: PokemonStats) => PrettyBsr;
+  getBsr: (stats: Stats) => PrettyBsr;
+  getMagicBsr: (stats: Stats) => PrettyBsr;
 }
 
 const expectedEffectiveAttack = 300;
@@ -142,14 +150,14 @@ const getMagicBsr = ({
   };
 };
 
-export const getMetagame = (pokemonList: Pokemon[]): Metagame => {
+export const getMetagame = (statsList: Stats[]): Metagame => {
   /**
    * Given a set of base speeds, produces a mapping from all possible base speeds
    * to how many Pokemon you will outspeed.
    */
   const baseSpeedFrequencies: number[] = [];
-  pokemonList
-    .map((pokemon) => pokemon.baseStats.spe)
+  statsList
+    .map((stat) => stat.spe)
     .forEach((baseSpeed) => {
       baseSpeedFrequencies[baseSpeed] =
         (baseSpeedFrequencies[baseSpeed] ?? 0) + 1;
@@ -159,7 +167,7 @@ export const getMetagame = (pokemonList: Pokemon[]): Metagame => {
     const outsped = baseSpeedFrequencies.filter(
       (_, baseSpeed) => baseSpeed < spe
     );
-    return outsped.reduce((acc, freq) => acc + freq, 0) / pokemonList.length;
+    return outsped.reduce((acc, freq) => acc + freq, 0) / statsList.length;
   };
 
   /**
@@ -207,7 +215,7 @@ export const getMetagame = (pokemonList: Pokemon[]): Metagame => {
     };
   };
 
-  const getAbsoluteRating = (stats: PokemonStats): AbsoluteRating => {
+  const getAbsoluteRating = (stats: Stats): AbsoluteRating => {
     const {
       hp: eHp,
       atk: eAtk,
@@ -224,9 +232,7 @@ export const getMetagame = (pokemonList: Pokemon[]): Metagame => {
     };
   };
 
-  const METAGAME_RATINGS = pokemonList.map((pokemon) =>
-    getAbsoluteRating(pokemon.baseStats)
-  );
+  const METAGAME_RATINGS = statsList.map((stat) => getAbsoluteRating(stat));
 
   const psList = METAGAME_RATINGS.map((rawRating) => rawRating.ps);
   const ptList = METAGAME_RATINGS.map((rawRating) => rawRating.pt);
@@ -251,7 +257,7 @@ export const getMetagame = (pokemonList: Pokemon[]): Metagame => {
    * Returns the normalized (relative) rating of the Pokemon's stats,
    * where each number represents the # of standard deviations from the norm.
    */
-  const getNormalizedRating = (stats: PokemonStats): NormalizedRating => {
+  const getNormalizedRating = (stats: Stats): NormalizedRating => {
     const rating = getAbsoluteRating(stats);
 
     return {
@@ -262,7 +268,7 @@ export const getMetagame = (pokemonList: Pokemon[]): Metagame => {
     };
   };
 
-  const getNormalizedBsr = (stats: PokemonStats): NormalizedBsr => {
+  const getNormalizedBsr = (stats: Stats): NormalizedBsr => {
     const normalizedRatings = getNormalizedRating(stats);
     const { ps, pt, ss, st } = normalizedRatings;
 
@@ -278,7 +284,7 @@ export const getMetagame = (pokemonList: Pokemon[]): Metagame => {
     };
   };
 
-  const getPrettyBsr = (stats: PokemonStats) => {
+  const getPrettyBsr = (stats: Stats) => {
     const normalizedBsr = getNormalizedBsr(stats);
 
     return {
@@ -296,7 +302,7 @@ export const getMetagame = (pokemonList: Pokemon[]): Metagame => {
   };
 
   return {
-    getBsr: (stats: PokemonStats) => getPrettyBsr(stats),
-    getMagicBsr: (stats: PokemonStats) => getMagicBsr(getEffectiveStats(stats)),
+    getBsr: (stats: Stats) => getPrettyBsr(stats),
+    getMagicBsr: (stats: Stats) => getMagicBsr(getEffectiveStats(stats)),
   };
 };

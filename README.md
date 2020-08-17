@@ -18,19 +18,7 @@ For more information on BSR, refer to the following URLs:
 # How to run
 
 1. Install [Node.js 13.2.0 or up](https://nodejs.org/en/) for ES6 module support.
-1. Clone [Pokemon Showdown's Pokedex](https://play.pokemonshowdown.com/data/pokedex.js) into `data/pokedex.ts`:
-   ```shell script
-   curl https://play.pokemonshowdown.com/data/pokedex.ts > data/pokedex.ts
-   ```
-1. Replace the following lines in `data/pokedex.ts`:
-   ```diff
-   -export.BattlePokedex =
-   +import { Pokedex } from "../src/pokedex";
-   +
-   +// eslint-disable-next-line import/prefer-default-export
-   +export const BattlePokedex: Pokedex = {
-   ```
-1. Run `npm prepare`.
+1. Run `npm install`.
 1. To run examples of how to use this library, run `npm run examples`.
 
 Thanks to the following resources for helping with setup!

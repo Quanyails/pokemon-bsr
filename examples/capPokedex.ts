@@ -1,28 +1,14 @@
-import isEqual from "lodash.isequal";
-import pick from "lodash.pick";
-import { Pokedex, Pokemon } from "../src/pokedex";
-import { BattlePokedex } from "../data/pokedex";
+import { Dex, ModdedDex } from "@pkmn/dex";
+import _ from "lodash";
+import { SpeciesData } from "@pkmn/dex-types";
 
-/**
- * Creates a copy of the Pokedex with small errors corrected.
- */
-const fixPokedexData = (pokedex: Pokedex) => {
-  // Other Mega Pokemon are listed as past-gen-only, but Mega Crucibelle is not.
-  return {
-    ...pokedex,
-    crucibellemega: {
-      ...pokedex.crucibellemega,
-      isNonstandard: "Past" as const,
-      tier: "Illegal",
-    },
-  };
-};
+type SpeciesRecord = Record<string, SpeciesData>;
 
 /**
  * If all of these Pokemon properties match on one of a Pokemon's formes,
  * we consider a Pokemon a duplicate of the base forme.
  */
-const duplicateRelevantProperties: (keyof Pokemon)[] = [
+const duplicateRelevantProperties: (keyof SpeciesData)[] = [
   "abilities",
   "baseStats",
   "types",
@@ -31,43 +17,41 @@ const duplicateRelevantProperties: (keyof Pokemon)[] = [
 /**
  * Removes duplicates of the Pokemon (e.g., cosmetic formes).
  */
-const filterDuplicates = (pokedex: Pokedex) => {
-  const filteredPokedex = {
-    ...pokedex,
+const filterDuplicates = (speciesRecord: SpeciesRecord) => {
+  const filteredSpeciesRecord = {
+    ...speciesRecord,
   };
 
-  Object.entries(pokedex).forEach(([, pokemon]) => {
-    const otherFormeIds: string[] = [];
-
+  const speciesList = Object.values(speciesRecord);
+  speciesList.forEach((pokemon) => {
     if (pokemon.otherFormes) {
-      pokemon.otherFormes.forEach((formeId) => {
-        otherFormeIds.push(formeId);
+      pokemon.otherFormes.forEach((formeName) => {
+        const formeId = _.findKey(
+          speciesRecord,
+          (species) => species.name === formeName
+        );
+        if (
+          _.isEqual(
+            _.pick(pokemon, ...duplicateRelevantProperties),
+            _.pick(speciesRecord[formeId!], ...duplicateRelevantProperties)
+          )
+        ) {
+          delete filteredSpeciesRecord[formeId!];
+        }
       });
     }
-
-    otherFormeIds.forEach((formeId) => {
-      const forme = pokedex[formeId];
-
-      if (
-        isEqual(
-          pick(pokemon, ...duplicateRelevantProperties),
-          pick(forme, ...duplicateRelevantProperties)
-        )
-      ) {
-        delete filteredPokedex[formeId];
-      }
-    });
   });
 
-  return filteredPokedex;
+  return filteredSpeciesRecord;
 };
 
-const filterEligible = (pokedex: Pokedex) => {
-  const filteredPokedex = {
-    ...pokedex,
+const filterEligible = (pokedex: ModdedDex, speciesRecord: SpeciesRecord) => {
+  const filteredSpeciesRecord = {
+    ...speciesRecord,
   };
 
-  Object.entries(pokedex).forEach(([pokemonId, pokemon]) => {
+  Object.entries(speciesRecord).forEach(([pokemonId, pokemon]) => {
+    const species = pokedex.getSpecies(pokemon.name);
     if (
       [
         // no tier specified usually refers to in-battle forme changes
@@ -79,23 +63,23 @@ const filterEligible = (pokedex: Pokedex) => {
         // "Uber",
         // "(Uber)",
         "Unreleased",
-      ].includes(pokemon.tier)
+      ].includes(species.tier)
     ) {
-      delete filteredPokedex[pokemonId];
+      delete filteredSpeciesRecord[pokemonId];
     }
-    if (pokemon.isNonstandard && pokemon.isNonstandard !== "CAP") {
-      delete filteredPokedex[pokemonId];
+    if (species.isNonstandard && species.isNonstandard !== "CAP") {
+      delete filteredSpeciesRecord[pokemonId];
     }
   });
-  return filteredPokedex;
+  return filteredSpeciesRecord;
 };
 
-const filterEdgeCases = (pokedex: Pokedex) => {
-  const filteredPokedex = {
-    ...pokedex,
+const filterEdgeCases = (speciesRecord: SpeciesRecord) => {
+  const filteredSpeciesRecord = {
+    ...speciesRecord,
   };
 
-  Object.entries(filteredPokedex).forEach(([pokemonId, pokemon]) => {
+  Object.entries(filteredSpeciesRecord).forEach(([pokemonId, pokemon]) => {
     if (
       [
         // Formes of formes have weird logic
@@ -134,18 +118,21 @@ const filterEdgeCases = (pokedex: Pokedex) => {
         "Crucibelle-Mega",
       ].includes(pokemon.name)
     ) {
-      delete filteredPokedex[pokemonId];
+      delete filteredSpeciesRecord[pokemonId];
     }
   });
-  return filteredPokedex;
+  return filteredSpeciesRecord;
 };
 
-const getUsablePokemon = (pokedex: Pokedex) => {
-  const fixedPokedex = fixPokedexData(pokedex);
-  const deduplicatedPokedex = filterDuplicates(fixedPokedex);
-  const eligiblePokedex = filterEligible(deduplicatedPokedex);
-  const noEdgeCasesPokedex = filterEdgeCases(eligiblePokedex);
-  return noEdgeCasesPokedex;
+const getUsablePokemon = (
+  pokedex: ModdedDex,
+  speciesRecord: SpeciesRecord
+): SpeciesRecord => {
+  const deduplicated = filterDuplicates(speciesRecord);
+  const eligible = filterEligible(pokedex, deduplicated);
+  const noEdgeCases = filterEdgeCases(eligible);
+  return noEdgeCases;
 };
 
-export default getUsablePokemon(BattlePokedex);
+const pokedexData = Dex.loadData();
+export default getUsablePokemon(Dex, pokedexData.Species);
