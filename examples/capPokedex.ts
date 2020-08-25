@@ -1,6 +1,5 @@
-import { Dex, ModdedDex } from "@pkmn/dex";
+import { Dex, SpeciesData } from "@pkmn/dex";
 import _ from "lodash";
-import { SpeciesData } from "@pkmn/dex-types";
 
 type SpeciesRecord = Record<string, SpeciesData>;
 
@@ -45,7 +44,7 @@ const filterDuplicates = (speciesRecord: SpeciesRecord) => {
   return filteredSpeciesRecord;
 };
 
-const filterEligible = (pokedex: ModdedDex, speciesRecord: SpeciesRecord) => {
+const filterEligible = (pokedex: typeof Dex, speciesRecord: SpeciesRecord) => {
   const filteredSpeciesRecord = {
     ...speciesRecord,
   };
@@ -125,7 +124,7 @@ const filterEdgeCases = (speciesRecord: SpeciesRecord) => {
 };
 
 const getUsablePokemon = (
-  pokedex: ModdedDex,
+  pokedex: typeof Dex,
   speciesRecord: SpeciesRecord
 ): SpeciesRecord => {
   const deduplicated = filterDuplicates(speciesRecord);
