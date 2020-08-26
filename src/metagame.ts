@@ -1,22 +1,8 @@
+import type { StatsTable } from "@pkmn/dex";
 import { getMean, getStdev } from "./math";
 
-interface Stats {
-  hp: number;
-  atk: number;
-  def: number;
-  spa: number;
-  spd: number;
-  spe: number;
-}
-
-interface EffectiveStats {
-  hp: number;
-  atk: number;
-  def: number;
-  spa: number;
-  spd: number;
-  spe: number;
-}
+type Stats = StatsTable;
+type EffectiveStats = StatsTable;
 
 /**
  * The four value that make up a Pokemon's rating.
