@@ -219,18 +219,23 @@ export const getMetagame = (statsList: Stats[]): Metagame => {
   const ssList = METAGAME_RATINGS.map((rawRating) => rawRating.ss);
   const stList = METAGAME_RATINGS.map((rawRating) => rawRating.st);
 
-  const ratingMeans = {
-    ps: getMean(psList),
-    pt: getMean(ptList),
-    ss: getMean(ssList),
-    st: getMean(stList),
-  };
-
-  const ratingStds = {
-    ps: getStdev("population", psList),
-    pt: getStdev("population", ptList),
-    ss: getStdev("population", ssList),
-    st: getStdev("population", stList),
+  const ratingValues = {
+    ps: {
+      mean: getMean(psList),
+      std: getStdev("population", psList),
+    },
+    pt: {
+      mean: getMean(ptList),
+      std: getStdev("population", ptList),
+    },
+    ss: {
+      mean: getMean(ssList),
+      std: getStdev("population", ssList),
+    },
+    st: {
+      mean: getMean(stList),
+      std: getStdev("population", stList),
+    },
   };
 
   /**
@@ -241,10 +246,10 @@ export const getMetagame = (statsList: Stats[]): Metagame => {
     const rating = getAbsoluteRating(stats);
 
     return {
-      ps: (rating.ps - ratingMeans.ps) / ratingStds.ps,
-      pt: (rating.pt - ratingMeans.pt) / ratingStds.pt,
-      ss: (rating.ss - ratingMeans.ss) / ratingStds.ss,
-      st: (rating.st - ratingMeans.st) / ratingStds.st,
+      ps: (rating.ps - ratingValues.ps.mean) / ratingValues.ps.std,
+      pt: (rating.pt - ratingValues.pt.mean) / ratingValues.pt.std,
+      ss: (rating.ss - ratingValues.ss.mean) / ratingValues.ss.std,
+      st: (rating.st - ratingValues.st.mean) / ratingValues.st.std,
     };
   };
 
