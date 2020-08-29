@@ -53,8 +53,6 @@ const filterEligible = (pokedex: typeof Dex, speciesRecord: SpeciesRecord) => {
     const species = pokedex.getSpecies(pokemon.name);
     if (
       [
-        // no tier specified usually refers to in-battle forme changes
-        undefined,
         "Illegal",
         // "LC",
         // "LC Uber",
