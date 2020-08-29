@@ -54,27 +54,12 @@ export interface Metagame {
   getMagicBsr: (stats: Stats) => Bsr;
 }
 
-const expectedEffectiveAttack = 300;
-const expectedTurnsToKo = 1.5;
-const metagameStalliness = expectedEffectiveAttack * expectedTurnsToKo;
-
 // Since we normalize ratings in finding BSR, this scaling factor cancels out.
 // See Page 6 of X-Act's PDF for explanation.
 // In practice, this value is used make the values for tankiness nice-looking.
 // In Gen. IV, this was 35.
 // In Gen. V, this was 1.
 const prettinessFactor = 1;
-
-const getSweepiness = (eAtk: number, eSpe: number) => {
-  return (
-    (eAtk * (eAtk * eSpe + metagameStalliness)) /
-    (eAtk * (1 - eSpe) + metagameStalliness)
-  );
-};
-
-const getTankiness = (eHp: number, eDef: number) => {
-  return (eHp * eDef) / prettinessFactor;
-};
 
 /**
  * Gen. IV magic formula decompiled from X-Act's BSR Java applet.
@@ -121,7 +106,30 @@ const getMagicBsr = ({
   };
 };
 
-export const getMetagame = (statsList: Stats[]): Metagame => {
+export const getMetagame = ({
+  expectedAttack = 132,
+  expectedTurnsToKo = 1.5,
+  statsList,
+}: {
+  expectedAttack?: number;
+  expectedTurnsToKo?: number;
+  statsList: Stats[];
+}): Metagame => {
+  // effective attack is calculated using same formula as getEffectiveStats() below.
+  const expectedEffectiveAttack = expectedAttack * 2 + 36;
+  const metagameStalliness = expectedEffectiveAttack * expectedTurnsToKo;
+
+  const getSweepiness = (eAtk: number, eSpe: number) => {
+    return (
+      (eAtk * (eAtk * eSpe + metagameStalliness)) /
+      (eAtk * (1 - eSpe) + metagameStalliness)
+    );
+  };
+
+  const getTankiness = (eHp: number, eDef: number) => {
+    return (eHp * eDef) / prettinessFactor;
+  };
+
   /**
    * Given a set of base speeds, produces a mapping from all possible base speeds
    * to how many Pokemon you will outspeed.

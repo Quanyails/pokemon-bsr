@@ -28,7 +28,7 @@ const stat150 = {
   spe: 150,
 };
 
-const metagame = getMetagame([stat50, stat100, stat150]);
+const metagame = getMetagame({ statsList: [stat50, stat100, stat150] });
 
 assert.deepStrictEqual(metagame.getBsr(stat100), {
   ps: 87.0225476716987,

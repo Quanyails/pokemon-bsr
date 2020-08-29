@@ -15,9 +15,9 @@ const dumpPokemonStats = () => {
 };
 
 const dumpPokemonBsrs = () => {
-  const metagame = getMetagame(
-    Object.values(pokedex).map((pokemon) => pokemon.baseStats)
-  );
+  const metagame = getMetagame({
+    statsList: Object.values(pokedex).map((pokemon) => pokemon.baseStats),
+  });
 
   Object.values(pokedex).forEach((pokemon) => {
     const { baseStats, name } = pokemon;
@@ -29,9 +29,9 @@ const dumpPokemonBsrs = () => {
 };
 
 const getBsr = () => {
-  const metagame = getMetagame(
-    Object.values(pokedex).map((pokemon) => pokemon.baseStats)
-  );
+  const metagame = getMetagame({
+    statsList: Object.values(pokedex).map((pokemon) => pokemon.baseStats),
+  });
 
   const stats = {
     hp: 100,
