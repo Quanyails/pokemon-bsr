@@ -226,17 +226,17 @@ export const getMetagame = (statsList: Stats[]): Metagame => {
   const stList = METAGAME_RATINGS.map((rawRating) => rawRating.st);
 
   const ratingMeans = {
-    ps: getMean(...psList),
-    pt: getMean(...ptList),
-    ss: getMean(...ssList),
-    st: getMean(...stList),
+    ps: getMean(psList),
+    pt: getMean(ptList),
+    ss: getMean(ssList),
+    st: getMean(stList),
   };
 
   const ratingStds = {
-    ps: getStdev("population", ...psList),
-    pt: getStdev("population", ...ptList),
-    ss: getStdev("population", ...ssList),
-    st: getStdev("population", ...stList),
+    ps: getStdev("population", psList),
+    pt: getStdev("population", ptList),
+    ss: getStdev("population", ssList),
+    st: getStdev("population", stList),
   };
 
   /**
@@ -266,7 +266,7 @@ export const getMetagame = (statsList: Stats[]): Metagame => {
       odb: Math.max(ps, ss) - Math.max(pt, st),
       // psb: Math.log((ps * pt) / (ss * st)),
       psb: ps - ss + pt - st,
-      or: getMean(ps, pt, ss, st),
+      or: getMean([ps, pt, ss, st]),
     };
   };
 
