@@ -2,12 +2,15 @@ import type { StatsTable } from "@pkmn/dex";
 import { getMean, getStdev } from "./math";
 
 type Stats = StatsTable;
-type EffectiveStats = StatsTable;
+
+type SpecificStats<K extends "effective" | "raw"> = Stats & {
+  kind: K;
+};
 
 /**
  * The four value that make up a Pokemon's rating.
  */
-interface AbsoluteRating {
+interface Rating {
   /** physical sweepiness */
   ps: number;
   /** physical tankiness */
@@ -18,24 +21,14 @@ interface AbsoluteRating {
   st: number;
 }
 
-/**
- * The four values that make up a Pokemon's rating, normalized.
- */
-interface NormalizedRating {
-  /** physical sweepiness */
-  ps: number;
-  /** physical tankiness */
-  pt: number;
-  /** special sweepiness */
-  ss: number;
-  /** special tankiness */
-  st: number;
-}
+type SpecificRating<K extends "absolute" | "normalized"> = Rating & {
+  kind: K;
+};
 
 /**
- * The base stat rating of the Pokemon, normalized.
+ * The base stat rating of the Pokemon.
  */
-interface NormalizedBsr {
+interface Bsr {
   /** physical sweepiness */
   ps: number;
   /** physical tankiness */
@@ -52,22 +45,13 @@ interface NormalizedBsr {
   or: number;
 }
 
-/**
- * The base stat rating of the Pokemon, using "nice" numbers.
- */
-interface PrettyBsr {
-  ps: number;
-  pt: number;
-  ss: number;
-  st: number;
-  odb: number;
-  psb: number;
-  or: number;
-}
+type SpecificBsr<K extends "normalized" | "pretty"> = Bsr & {
+  kind: K;
+};
 
 export interface Metagame {
-  getBsr: (stats: Stats) => PrettyBsr;
-  getMagicBsr: (stats: Stats) => PrettyBsr;
+  getBsr: (stats: Stats) => Bsr;
+  getMagicBsr: (stats: Stats) => Bsr;
 }
 
 const expectedEffectiveAttack = 300;
@@ -110,7 +94,7 @@ const getMagicBsr = ({
   spa: eSpa,
   spd: eSpD,
   spe: eSpe,
-}: EffectiveStats): PrettyBsr => {
+}: SpecificStats<"effective">): SpecificBsr<"pretty"> => {
   const pt = (eHP * eDef) / 417.5187 - 18.9256;
   const st = (eHP * eSpD) / 434.8833 - 13.9044;
   const ps =
@@ -133,6 +117,7 @@ const getMagicBsr = ({
     odb,
     psb,
     or: rating,
+    kind: "pretty",
   };
 };
 
@@ -190,7 +175,7 @@ export const getMetagame = (statsList: Stats[]): Metagame => {
     spa,
     spd,
     spe,
-  }: EffectiveStats) => {
+  }: SpecificStats<"raw">): SpecificStats<"effective"> => {
     return {
       hp: hp * 2 + 141, // personal note: / 8 to use normalized value according to sweeptank paper
       atk: atk * 2 + 36, // personal note: / 2 to use normalized value according to sweeptank paper
@@ -198,10 +183,13 @@ export const getMetagame = (statsList: Stats[]): Metagame => {
       spa: spa * 2 + 36, // personal note: / 2 to use normalized value according to sweeptank paper
       spd: spd * 2 + 36, // personal note: / 2 to use normalized value according to sweeptank paper
       spe: getBaseSpeedFactor(spe),
+      kind: "effective",
     };
   };
 
-  const getAbsoluteRating = (stats: Stats): AbsoluteRating => {
+  const getAbsoluteRating = (
+    stats: SpecificStats<"raw">
+  ): SpecificRating<"absolute"> => {
     const {
       hp: eHp,
       atk: eAtk,
@@ -215,46 +203,59 @@ export const getMetagame = (statsList: Stats[]): Metagame => {
       pt: getTankiness(eHp, eDef),
       ss: getSweepiness(eSpa, eSpe),
       st: getTankiness(eHp, eSpd),
+      kind: "absolute",
     };
   };
 
-  const METAGAME_RATINGS = statsList.map((stat) => getAbsoluteRating(stat));
+  const METAGAME_RATINGS = statsList.map((stats) =>
+    getAbsoluteRating({
+      ...stats,
+      kind: "raw",
+    })
+  );
 
   const psList = METAGAME_RATINGS.map((rawRating) => rawRating.ps);
   const ptList = METAGAME_RATINGS.map((rawRating) => rawRating.pt);
   const ssList = METAGAME_RATINGS.map((rawRating) => rawRating.ss);
   const stList = METAGAME_RATINGS.map((rawRating) => rawRating.st);
 
-  const ratingMeans = {
-    ps: getMean(...psList),
-    pt: getMean(...ptList),
-    ss: getMean(...ssList),
-    st: getMean(...stList),
-  };
-
-  const ratingStds = {
-    ps: getStdev("population", ...psList),
-    pt: getStdev("population", ...ptList),
-    ss: getStdev("population", ...ssList),
-    st: getStdev("population", ...stList),
+  const ratingValues = {
+    ps: {
+      mean: getMean(psList),
+      std: getStdev("population", psList),
+    },
+    pt: {
+      mean: getMean(ptList),
+      std: getStdev("population", ptList),
+    },
+    ss: {
+      mean: getMean(ssList),
+      std: getStdev("population", ssList),
+    },
+    st: {
+      mean: getMean(stList),
+      std: getStdev("population", stList),
+    },
   };
 
   /**
    * Returns the normalized (relative) rating of the Pokemon's stats,
    * where each number represents the # of standard deviations from the norm.
    */
-  const getNormalizedRating = (stats: Stats): NormalizedRating => {
+  const getNormalizedRating = (stats: SpecificStats<"raw">): Rating => {
     const rating = getAbsoluteRating(stats);
 
     return {
-      ps: (rating.ps - ratingMeans.ps) / ratingStds.ps,
-      pt: (rating.pt - ratingMeans.pt) / ratingStds.pt,
-      ss: (rating.ss - ratingMeans.ss) / ratingStds.ss,
-      st: (rating.st - ratingMeans.st) / ratingStds.st,
+      ps: (rating.ps - ratingValues.ps.mean) / ratingValues.ps.std,
+      pt: (rating.pt - ratingValues.pt.mean) / ratingValues.pt.std,
+      ss: (rating.ss - ratingValues.ss.mean) / ratingValues.ss.std,
+      st: (rating.st - ratingValues.st.mean) / ratingValues.st.std,
     };
   };
 
-  const getNormalizedBsr = (stats: Stats): NormalizedBsr => {
+  const getNormalizedBsr = (
+    stats: SpecificStats<"raw">
+  ): SpecificBsr<"normalized"> => {
     const normalizedRatings = getNormalizedRating(stats);
     const { ps, pt, ss, st } = normalizedRatings;
 
@@ -266,11 +267,12 @@ export const getMetagame = (statsList: Stats[]): Metagame => {
       odb: Math.max(ps, ss) - Math.max(pt, st),
       // psb: Math.log((ps * pt) / (ss * st)),
       psb: ps - ss + pt - st,
-      or: getMean(ps, pt, ss, st),
+      or: getMean([ps, pt, ss, st]),
+      kind: "normalized",
     };
   };
 
-  const getPrettyBsr = (stats: Stats) => {
+  const getPrettyBsr = (stats: SpecificStats<"raw">): SpecificBsr<"pretty"> => {
     const normalizedBsr = getNormalizedBsr(stats);
 
     return {
@@ -284,11 +286,26 @@ export const getMetagame = (statsList: Stats[]): Metagame => {
       psb: normalizedBsr.psb * 50,
       // rating has a mean of 200 and a SD of 100
       or: 200 + normalizedBsr.or * 100,
+      kind: "pretty",
     };
   };
 
   return {
-    getBsr: (stats: Stats) => getPrettyBsr(stats),
-    getMagicBsr: (stats: Stats) => getMagicBsr(getEffectiveStats(stats)),
+    getBsr: (stats: Stats): Bsr => {
+      const { kind, ...bsr } = getPrettyBsr({
+        ...stats,
+        kind: "raw",
+      });
+      return bsr;
+    },
+    getMagicBsr: (stats: Stats): Bsr => {
+      const { kind, ...bsr } = getMagicBsr(
+        getEffectiveStats({
+          ...stats,
+          kind: "raw",
+        })
+      );
+      return bsr;
+    },
   };
 };
