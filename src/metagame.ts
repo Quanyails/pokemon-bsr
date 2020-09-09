@@ -1,5 +1,5 @@
 import type { StatsTable } from "@pkmn/dex";
-import { getMean, getStdev } from "./math";
+import normalDistribution from "./normalDistribution";
 
 type Stats = StatsTable;
 
@@ -227,24 +227,10 @@ export const getMetagame = ({
   const ssList = METAGAME_RATINGS.map((rawRating) => rawRating.ss);
   const stList = METAGAME_RATINGS.map((rawRating) => rawRating.st);
 
-  const ratingValues = {
-    ps: {
-      mean: getMean(psList),
-      std: getStdev("population", psList),
-    },
-    pt: {
-      mean: getMean(ptList),
-      std: getStdev("population", ptList),
-    },
-    ss: {
-      mean: getMean(ssList),
-      std: getStdev("population", ssList),
-    },
-    st: {
-      mean: getMean(stList),
-      std: getStdev("population", stList),
-    },
-  };
+  const psDistribution = normalDistribution(psList);
+  const ptDistribution = normalDistribution(ptList);
+  const ssDistribution = normalDistribution(ssList);
+  const stDistribution = normalDistribution(stList);
 
   /**
    * Returns the normalized (relative) rating of the Pokemon's stats,
@@ -256,13 +242,22 @@ export const getMetagame = ({
     const rating = getAbsoluteRating(stats);
 
     return {
-      ps: (rating.ps - ratingValues.ps.mean) / ratingValues.ps.std,
-      pt: (rating.pt - ratingValues.pt.mean) / ratingValues.pt.std,
-      ss: (rating.ss - ratingValues.ss.mean) / ratingValues.ss.std,
-      st: (rating.st - ratingValues.st.mean) / ratingValues.st.std,
+      ps: psDistribution.getZScore(rating.ps),
+      pt: ptDistribution.getZScore(rating.pt),
+      ss: ssDistribution.getZScore(rating.ss),
+      st: stDistribution.getZScore(rating.st),
       kind: "normalized",
     };
   };
+
+  const METAGAME_ORS = statsList.map((stats) => {
+    const { ps, pt, ss, st } = getNormalizedRating({
+      ...stats,
+      kind: "raw",
+    });
+    return ps + pt + ss + st;
+  });
+  const orDistribution = normalDistribution(METAGAME_ORS);
 
   const getNormalizedBsr = (
     stats: SpecificStats<"raw">
@@ -278,7 +273,7 @@ export const getMetagame = ({
       odb: Math.max(ps, ss) - Math.max(pt, st),
       // psb: Math.log((ps * pt) / (ss * st)),
       psb: ps - ss + pt - st,
-      or: getMean([ps, pt, ss, st]),
+      or: orDistribution.getZScore(ps + pt + ss + st),
       kind: "normalized",
     };
   };
