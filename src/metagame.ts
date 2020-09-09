@@ -250,7 +250,9 @@ export const getMetagame = ({
    * Returns the normalized (relative) rating of the Pokemon's stats,
    * where each number represents the # of standard deviations from the norm.
    */
-  const getNormalizedRating = (stats: SpecificStats<"raw">): Rating => {
+  const getNormalizedRating = (
+    stats: SpecificStats<"raw">
+  ): SpecificRating<"normalized"> => {
     const rating = getAbsoluteRating(stats);
 
     return {
@@ -258,6 +260,7 @@ export const getMetagame = ({
       pt: (rating.pt - ratingValues.pt.mean) / ratingValues.pt.std,
       ss: (rating.ss - ratingValues.ss.mean) / ratingValues.ss.std,
       st: (rating.st - ratingValues.st.mean) / ratingValues.st.std,
+      kind: "normalized",
     };
   };
 
