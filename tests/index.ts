@@ -41,7 +41,7 @@ const bsrs = [stat50, stat100, stat150].map((stats) => metagame.getBsr(stats));
   assertAlmostEqual(getMean(bsrs.map((bsr) => bsr[prop])), 100);
   assertAlmostEqual(
     getStdev(
-      "population",
+      "sample",
       bsrs.map((bsr) => bsr[prop])
     ),
     50
@@ -51,18 +51,18 @@ const bsrs = [stat50, stat100, stat150].map((stats) => metagame.getBsr(stats));
 assertAlmostEqual(getMean(bsrs.map((bsr) => bsr.or)), 200);
 assertAlmostEqual(
   getStdev(
-    "population",
+    "sample",
     bsrs.map((bsr) => bsr.or)
   ),
   100
 );
 
 assert.deepStrictEqual(metagame.getBsr(stat100), {
-  ps: 87.0225476716987,
-  pt: 92.95979567476067,
-  ss: 87.0225476716987,
-  st: 92.95979567476067,
-  odb: -5.937248003061978,
+  ps: 87.58756110439037,
+  pt: 94.25169723940951,
+  ss: 87.58756110439037,
+  st: 94.25169723940951,
+  odb: -6.664136135019133,
   psb: 0,
-  or: 179.96431667492442,
+  or: 181.80816393000578,
 });
