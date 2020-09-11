@@ -107,7 +107,7 @@ const getMagicBsr = ({
 };
 
 export const getMetagame = ({
-  expectedAttack = 132,
+  expectedAttack = 120 + 1 / 3,
   expectedTurnsToKo = 1.5,
   statsList,
 }: {
