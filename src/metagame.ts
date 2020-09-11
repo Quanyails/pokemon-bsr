@@ -229,10 +229,12 @@ export const getMetagame = ({
   const ssList = METAGAME_RATINGS.map((rawRating) => rawRating.ss);
   const stList = METAGAME_RATINGS.map((rawRating) => rawRating.st);
 
-  const psDistribution = normalDistribution(psList);
-  const ptDistribution = normalDistribution(ptList);
-  const ssDistribution = normalDistribution(ssList);
-  const stDistribution = normalDistribution(stList);
+  // We currently use the sample stdev for BSRs,
+  // but we could use population stdev to calculate normalization constants.
+  const psDistribution = normalDistribution("sample", psList);
+  const ptDistribution = normalDistribution("sample", ptList);
+  const ssDistribution = normalDistribution("sample", ssList);
+  const stDistribution = normalDistribution("sample", stList);
 
   /**
    * Returns the normalized (relative) rating of the Pokemon's stats,
@@ -259,7 +261,7 @@ export const getMetagame = ({
     });
     return ps + pt + ss + st;
   });
-  const orDistribution = normalDistribution(METAGAME_ORS);
+  const orDistribution = normalDistribution("sample", METAGAME_ORS);
 
   const getNormalizedBsr = (
     stats: SpecificStats<"raw">
