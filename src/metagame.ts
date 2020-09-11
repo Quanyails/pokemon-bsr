@@ -132,7 +132,7 @@ export const getMetagame = ({
 
   /**
    * Given a set of base speeds, produces a mapping from all possible base speeds
-   * to how many Pokemon you will outspeed.
+   * to how many Pokemon you will outspeed or tie with.
    */
   const baseSpeedFrequencies: number[] = [];
   statsList
@@ -143,10 +143,12 @@ export const getMetagame = ({
     });
 
   const getBaseSpeedFactor = (spe: number) => {
-    const outsped = baseSpeedFrequencies.filter(
-      (_, baseSpeed) => baseSpeed < spe
+    const outspedOrTied = baseSpeedFrequencies.filter(
+      (_, baseSpeed) => baseSpeed <= spe
     );
-    return outsped.reduce((acc, freq) => acc + freq, 0) / statsList.length;
+    return (
+      outspedOrTied.reduce((acc, freq) => acc + freq, 0) / statsList.length
+    );
   };
 
   /**
