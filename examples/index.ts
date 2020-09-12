@@ -1,5 +1,5 @@
 import capPokedex from "./capPokedex";
-import { getMetagame } from "../src/metagame";
+import { bsrCalculator } from "../src/bsr";
 
 const pokedex = capPokedex;
 
@@ -15,7 +15,7 @@ const dumpPokemonStats = () => {
 };
 
 const dumpPokemonBsrs = () => {
-  const metagame = getMetagame({
+  const metagame = bsrCalculator({
     statsList: Object.values(pokedex).map((pokemon) => pokemon.baseStats),
   });
 
@@ -29,7 +29,7 @@ const dumpPokemonBsrs = () => {
 };
 
 const getBsr = () => {
-  const metagame = getMetagame({
+  const metagame = bsrCalculator({
     statsList: Object.values(pokedex).map((pokemon) => pokemon.baseStats),
   });
 

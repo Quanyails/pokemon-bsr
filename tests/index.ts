@@ -1,5 +1,5 @@
 import assert from "assert";
-import { getMetagame } from "../src/metagame";
+import { bsrCalculator } from "../src/bsr";
 import { getMean, getStdev } from "../src/math";
 
 const stat50 = {
@@ -29,7 +29,7 @@ const stat150 = {
   spe: 150,
 };
 
-const metagame = getMetagame({ statsList: [stat50, stat100, stat150] });
+const metagame = bsrCalculator({ statsList: [stat50, stat100, stat150] });
 
 const assertAlmostEqual = (n: number, expected: number) => {
   assert(Math.abs(n - expected) < 0.0001);

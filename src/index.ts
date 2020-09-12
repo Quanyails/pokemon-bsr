@@ -1,3 +1,3 @@
-import { getMetagame } from "./metagame";
+import { bsrCalculator } from "./bsr";
 
-export default getMetagame;
+export default bsrCalculator;
