@@ -25,18 +25,7 @@ type SpecificRating<K extends "absolute" | "normalized"> = Rating & {
   kind: K;
 };
 
-/**
- * The base stat rating of the Pokemon.
- */
-interface Bsr {
-  /** physical sweepiness */
-  ps: number;
-  /** physical tankiness */
-  pt: number;
-  /** special sweepiness */
-  ss: number;
-  /** special tankiness */
-  st: number;
+interface DerivedRating {
   /** offensive/defensive bias */
   odb: number;
   /** physical/special bias */
@@ -44,6 +33,17 @@ interface Bsr {
   /** overall rating */
   or: number;
 }
+
+type SpecificDerivedRating<
+  K extends "absolute" | "normalized"
+> = DerivedRating & {
+  kind: K;
+};
+
+/**
+ * The base stat rating of the Pokemon.
+ */
+type Bsr = Rating & DerivedRating;
 
 type SpecificBsr<K extends "normalized" | "pretty"> = Bsr & {
   kind: K;
@@ -254,30 +254,55 @@ export const getMetagame = ({
     };
   };
 
-  const METAGAME_ORS = statsList.map((stats) => {
-    const { ps, pt, ss, st } = getNormalizedRating({
-      ...stats,
-      kind: "raw",
-    });
-    return ps + pt + ss + st;
-  });
-  const orDistribution = normalDistribution("sample", METAGAME_ORS);
-
-  const getNormalizedBsr = (
-    stats: SpecificStats<"raw">
-  ): SpecificBsr<"normalized"> => {
-    const normalizedRatings = getNormalizedRating(stats);
-    const { ps, pt, ss, st } = normalizedRatings;
-
+  const getDerivedRating = ({
+    ps,
+    pt,
+    ss,
+    st,
+  }: SpecificRating<"normalized">): SpecificDerivedRating<"absolute"> => {
     // The original implementation of ODB relies on pretty rating numbers,
     // which do not have mathematical meaning. We use the normalized ratings instead.
     return {
-      ...normalizedRatings,
       // odb: Math.log(Math.max(ps, ss) / Math.max(pt, st)),
       odb: Math.max(ps, ss) - Math.max(pt, st),
       // psb: Math.log((ps * pt) / (ss * st)),
       psb: ps - ss + pt - st,
-      or: orDistribution.getZScore(ps + pt + ss + st),
+      or: ps + pt + ss + st,
+      kind: "absolute",
+    };
+  };
+
+  const METAGAME_DERIVED_RATINGS = statsList.map((stats) => {
+    const normalizedRating = getNormalizedRating({
+      ...stats,
+      kind: "raw",
+    });
+    return getDerivedRating(normalizedRating);
+  });
+  const odbDistribution = normalDistribution(
+    "sample",
+    METAGAME_DERIVED_RATINGS.map((absoluteRating) => absoluteRating.odb)
+  );
+  const psbDistribution = normalDistribution(
+    "sample",
+    METAGAME_DERIVED_RATINGS.map((absoluteRating) => absoluteRating.psb)
+  );
+  const orDistribution = normalDistribution(
+    "sample",
+    METAGAME_DERIVED_RATINGS.map((absoluteRating) => absoluteRating.or)
+  );
+
+  const getNormalizedBsr = (
+    stats: SpecificStats<"raw">
+  ): SpecificBsr<"normalized"> => {
+    const normalizedRating = getNormalizedRating(stats);
+    const { odb, psb, or } = getDerivedRating(normalizedRating);
+
+    return {
+      ...normalizedRating,
+      odb: odbDistribution.getZScore(odb),
+      psb: psbDistribution.getZScore(psb),
+      or: orDistribution.getZScore(or),
       kind: "normalized",
     };
   };
