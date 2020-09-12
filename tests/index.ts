@@ -66,3 +66,13 @@ assert.deepStrictEqual(metagame.getBsr(stat100), {
   psb: NaN,
   or: 181.80816393000578,
 });
+
+assert.deepStrictEqual(metagame.getMagicBsr(stat100), {
+  ps: 143.09022282138488,
+  pt: 173.82265295250247,
+  ss: 144.88782091085676,
+  st: 171.14754382033064,
+  odb: -4.960483858343559,
+  psb: 0.12828628675592701,
+  or: 352.6734418779172,
+});
