@@ -4,12 +4,12 @@ const normalDistribution = (type: "population" | "sample", nums: number[]) => {
   const mean = getMean(nums);
   const std = getStdev(type, nums);
 
-  const getZValue = (n: number) => {
+  const getZScore = (n: number) => {
     return (n - mean) / std;
   };
 
   return {
-    getZScore: getZValue,
+    getZScore,
   };
 };
 
