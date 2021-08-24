@@ -1,6 +1,6 @@
-import { Stats } from "./metagame";
+import { Stats } from './metagame';
 
-export type SpecificStats<K extends "effective" | "raw"> = Stats & {
+export type SpecificStats<K extends 'effective' | 'raw'> = Stats & {
   kind: K;
 };
 
@@ -15,8 +15,8 @@ export const getEffectiveStatsCalculator = ({
    */
   const baseSpeedFrequencies: number[] = [];
   statsList
-    .map((stat) => stat.spe)
-    .forEach((baseSpeed) => {
+    .map(stat => stat.spe)
+    .forEach(baseSpeed => {
       baseSpeedFrequencies[baseSpeed] =
         (baseSpeedFrequencies[baseSpeed] ?? 0) + 1;
     });
@@ -64,7 +64,7 @@ export const getEffectiveStatsCalculator = ({
     spa,
     spd,
     spe,
-  }: SpecificStats<"raw">): SpecificStats<"effective"> => {
+  }: SpecificStats<'raw'>): SpecificStats<'effective'> => {
     return {
       hp: hp * 2 + 141, // personal note: / 8 to use normalized value according to sweeptank paper
       atk: atk * 2 + 36, // personal note: / 2 to use normalized value according to sweeptank paper
@@ -72,17 +72,17 @@ export const getEffectiveStatsCalculator = ({
       spa: spa * 2 + 36, // personal note: / 2 to use normalized value according to sweeptank paper
       spd: spd * 2 + 36, // personal note: / 2 to use normalized value according to sweeptank paper
       spe: getBaseSpeedFactor(spe),
-      kind: "effective",
+      kind: 'effective',
     };
   };
 
   return {
     getEffectiveStats: (
-      stats: SpecificStats<"raw">
-    ): SpecificStats<"effective"> => {
+      stats: SpecificStats<'raw'>
+    ): SpecificStats<'effective'> => {
       return getEffectiveStats({
         ...stats,
-        kind: "raw",
+        kind: 'raw',
       });
     },
   };
