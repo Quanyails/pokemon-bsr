@@ -1,14 +1,14 @@
-import { getRatingCalculator, Rating } from "./rating";
-import { DerivedRating, getDerivedRatingCalculator } from "./derivedRating";
-import { Stats } from "./metagame";
-import { getEffectiveStatsCalculator, SpecificStats } from "./effectiveStats";
+import { getRatingCalculator, Rating } from './rating';
+import { DerivedRating, getDerivedRatingCalculator } from './derivedRating';
+import { Stats } from './metagame';
+import { getEffectiveStatsCalculator, SpecificStats } from './effectiveStats';
 
 /**
  * The base stat rating of the Pokemon.
  */
 type Bsr = Rating & DerivedRating;
 
-type SpecificBsr<K extends "normalized" | "pretty"> = Bsr & {
+type SpecificBsr<K extends 'normalized' | 'pretty'> = Bsr & {
   kind: K;
 };
 
@@ -35,7 +35,7 @@ const getMagicBsr = ({
   spa: eSpa,
   spd: eSpD,
   spe: eSpe,
-}: SpecificStats<"effective">): SpecificBsr<"pretty"> => {
+}: SpecificStats<'effective'>): SpecificBsr<'pretty'> => {
   const pt = (eHP * eDef) / 417.5187 - 18.9256;
   const st = (eHP * eSpD) / 434.8833 - 13.9044;
   const ps =
@@ -58,7 +58,7 @@ const getMagicBsr = ({
     odb,
     psb,
     or: rating,
-    kind: "pretty",
+    kind: 'pretty',
   };
 };
 
@@ -72,10 +72,10 @@ export const bsrCalculator = ({
   statsList: Stats[];
 }): BsrCalculator => {
   const effectiveStatsCalculator = getEffectiveStatsCalculator({ statsList });
-  const effectiveStatsList = statsList.map((stats) =>
+  const effectiveStatsList = statsList.map(stats =>
     effectiveStatsCalculator.getEffectiveStats({
       ...stats,
-      kind: "raw",
+      kind: 'raw',
     })
   );
 
@@ -84,26 +84,26 @@ export const bsrCalculator = ({
     expectedTurnsToKo,
     effectiveStatsList,
   });
-  const ratings = effectiveStatsList.map((effectiveStats) =>
+  const ratings = effectiveStatsList.map(effectiveStats =>
     ratingCalculator.getRating(effectiveStats)
   );
 
   const derivedRatingCalculator = getDerivedRatingCalculator(ratings);
 
-  const getNormalizedBsr = (stats: Stats): SpecificBsr<"normalized"> => {
+  const getNormalizedBsr = (stats: Stats): SpecificBsr<'normalized'> => {
     const effectiveStats = effectiveStatsCalculator.getEffectiveStats({
       ...stats,
-      kind: "raw",
+      kind: 'raw',
     });
     const rating = ratingCalculator.getRating(effectiveStats);
     return {
       ...rating,
       ...derivedRatingCalculator.getDerivedRating(rating),
-      kind: "normalized",
+      kind: 'normalized',
     };
   };
 
-  const getPrettyBsr = (stats: SpecificStats<"raw">): SpecificBsr<"pretty"> => {
+  const getPrettyBsr = (stats: SpecificStats<'raw'>): SpecificBsr<'pretty'> => {
     const normalizedBsr = getNormalizedBsr(stats);
 
     return {
@@ -117,7 +117,7 @@ export const bsrCalculator = ({
       psb: normalizedBsr.psb * 50,
       // rating has a mean of 200 and a SD of 100
       or: 200 + normalizedBsr.or * 100,
-      kind: "pretty",
+      kind: 'pretty',
     };
   };
 
@@ -125,14 +125,14 @@ export const bsrCalculator = ({
     getBsr: (stats: Stats): Bsr => {
       const { kind, ...bsr } = getPrettyBsr({
         ...stats,
-        kind: "raw",
+        kind: 'raw',
       });
       return bsr;
     },
     getMagicBsr: (stats: Stats): Bsr => {
       const effectiveStats = effectiveStatsCalculator.getEffectiveStats({
         ...stats,
-        kind: "raw",
+        kind: 'raw',
       });
 
       const { kind, ...bsr } = getMagicBsr(effectiveStats);

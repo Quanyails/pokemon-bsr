@@ -1,5 +1,5 @@
-import normalDistribution from "./normalDistribution";
-import { SpecificStats } from "./effectiveStats";
+import normalDistribution from './normalDistribution';
+import { SpecificStats } from './effectiveStats';
 
 /**
  * The four value that make up a Pokemon's rating.
@@ -15,7 +15,7 @@ export interface Rating {
   st: number;
 }
 
-export type SpecificRating<K extends "absolute" | "normalized"> = Rating & {
+export type SpecificRating<K extends 'absolute' | 'normalized'> = Rating & {
   kind: K;
 };
 
@@ -31,7 +31,7 @@ export const getRatingCalculator = ({
   expectedAttack,
   expectedTurnsToKo,
 }: {
-  effectiveStatsList: SpecificStats<"effective">[];
+  effectiveStatsList: SpecificStats<'effective'>[];
   expectedAttack: number;
   expectedTurnsToKo: number;
 }) => {
@@ -57,39 +57,39 @@ export const getRatingCalculator = ({
     spa: eSpa,
     spd: eSpd,
     spe: eSpe,
-  }: SpecificStats<"effective">): SpecificRating<"absolute"> => {
+  }: SpecificStats<'effective'>): SpecificRating<'absolute'> => {
     return {
       ps: getSweepiness(eAtk, eSpe),
       pt: getTankiness(eHp, eDef),
       ss: getSweepiness(eSpa, eSpe),
       st: getTankiness(eHp, eSpd),
-      kind: "absolute",
+      kind: 'absolute',
     };
   };
 
-  const METAGAME_RATINGS = effectiveStatsList.map((effectiveStats) =>
+  const METAGAME_RATINGS = effectiveStatsList.map(effectiveStats =>
     getAbsoluteRating(effectiveStats)
   );
 
-  const psList = METAGAME_RATINGS.map((rawRating) => rawRating.ps);
-  const ptList = METAGAME_RATINGS.map((rawRating) => rawRating.pt);
-  const ssList = METAGAME_RATINGS.map((rawRating) => rawRating.ss);
-  const stList = METAGAME_RATINGS.map((rawRating) => rawRating.st);
+  const psList = METAGAME_RATINGS.map(rawRating => rawRating.ps);
+  const ptList = METAGAME_RATINGS.map(rawRating => rawRating.pt);
+  const ssList = METAGAME_RATINGS.map(rawRating => rawRating.ss);
+  const stList = METAGAME_RATINGS.map(rawRating => rawRating.st);
 
   // We currently use the sample stdev for BSRs,
   // but we could use population stdev to calculate normalization constants.
-  const psDistribution = normalDistribution("sample", psList);
-  const ptDistribution = normalDistribution("sample", ptList);
-  const ssDistribution = normalDistribution("sample", ssList);
-  const stDistribution = normalDistribution("sample", stList);
+  const psDistribution = normalDistribution('sample', psList);
+  const ptDistribution = normalDistribution('sample', ptList);
+  const ssDistribution = normalDistribution('sample', ssList);
+  const stDistribution = normalDistribution('sample', stList);
 
   /**
    * Returns the normalized (relative) rating of the Pokemon's stats,
    * where each number represents the # of standard deviations from the norm.
    */
   const getNormalizedRating = (
-    stats: SpecificStats<"effective">
-  ): SpecificRating<"normalized"> => {
+    stats: SpecificStats<'effective'>
+  ): SpecificRating<'normalized'> => {
     const rating = getAbsoluteRating(stats);
 
     return {
@@ -97,14 +97,14 @@ export const getRatingCalculator = ({
       pt: ptDistribution.getZScore(rating.pt),
       ss: ssDistribution.getZScore(rating.ss),
       st: stDistribution.getZScore(rating.st),
-      kind: "normalized",
+      kind: 'normalized',
     };
   };
 
   return {
     getRating: (
-      stats: SpecificStats<"effective">
-    ): SpecificRating<"normalized"> => {
+      stats: SpecificStats<'effective'>
+    ): SpecificRating<'normalized'> => {
       return getNormalizedRating(stats);
     },
   };
